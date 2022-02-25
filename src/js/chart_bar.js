@@ -10,13 +10,14 @@ function chart() {
     const innerRadius = 200;
     const outerRadius = 2000 / 2 - margin;
     const data = rawdata.filter(d => d.municipality === municipality)[0];
-    console.log('dataset', 'translate(' + (width / 2 + margin.left) + ',' + (height / 2 + margin.top) + ')');
+
+    console.log('dataset', `translate(${(width / 2 + margin.left)},${(height / 2 + margin.top)})`);
 
     const svg = d3.select('#chart')
         .append('svg')
         .attr('viewBox', [-width / 2, -height / 2, width, height])
         .append('g')
-        .attr('transform', 'translate(' + (width / 2 + margin.left) + ',' + (height / 2 + margin.top) + ')');
+        .attr('transform', `translate(${(width / 2 + margin.left)},${(height / 2 + margin.top)})`);
 
 
     const x = d3.scaleBand()
@@ -48,7 +49,7 @@ function chart() {
         .attr('class', 'yo')
         .attr('d', d3.arc()
             .innerRadius(innerRadius)
-            .outerRadius((d) => y(d.case_count))
+            .outerRadius((d) => y(d.case_count / data.poulation))
             .startAngle((d) => x(d.date))
             .endAngle((d) => x(d.date) + x.bandwidth())
             .padAngle(.1)
@@ -61,7 +62,7 @@ function chart() {
         .enter()
         .append('g')
         .attr('text-anchor', function(d) { return (x(d.date) + x.bandwidth() / 2 + Math.PI) % (2 * Math.PI) < Math.PI ? 'end' : 'start'; })
-        .attr('transform', function(d) { return 'rotate(' + ((x(d.date) + x.bandwidth() / 2) * 180 / Math.PI - 90) + ')' + 'translate(' + (y(-250) + 30) + ',0)'; })
+        .attr('transform', function(d) { return `rotate(${((x(d.date) + x.bandwidth() / 2) * 180 / Math.PI - 90)}) translate(${(y(-250) + 30)},0)`; })
         .append('text')
         .text(function(d) { return (d.case_count) })
         .attr('transform', function(d) { return (x(d.date) + x.bandwidth() / 2 + Math.PI) % (2 * Math.PI) < Math.PI ? 'rotate(180)' : 'rotate(0)'; })
@@ -73,6 +74,6 @@ function chart() {
 chart();
 
 document.getElementById('ddlMuni').addEventListener("change", function() {
-    document.getElementById('chart').innerHTML = "";
+    document.getElementById('chart').innerHTML = ``;
     chart();
 });

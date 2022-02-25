@@ -7,6 +7,7 @@ const IndexPage = () => {
 
   useEffect(() => {
     chart('Acton');
+    intro('Acton');
   }, []);
 
   const municipalities = [
@@ -111,26 +112,23 @@ const IndexPage = () => {
     { label: 'Winthrop', value: 'Winthrop' },
     { label: 'Woburn', value: 'Woburn' },
     { label: 'Wrentham', value: 'Wrentham' },
-    { label: 'MAPC', value: 'MAPC' },
+    { label: 'MAPC Region', value: 'MAPC Region' },
   ]
 
   function chart(selectValue) {
       const municipality = selectValue;
-      const rawdata = dataset;
       const width = 1000;
       const height = width;
       const margin = 10;
       const innerRadius = 200;
-      const outerRadius = 2000 / 2 - margin;
-      const data = rawdata.filter(d => d.municipality === municipality)[0];
-      // console.log('dataset', 'translate(' + (width / 2 + margin.left) + ',' + (height / 2 + margin.top) + ')');
+      const outerRadius = 2175 / 2 - margin;
+      const data = dataset.filter(d => d.municipality === municipality)[0];
   
       const svg = d3.select('#chart')
           .append('svg')
           .attr('viewBox', [-width / 2, -height / 2, width, height])
           .append('g')
-          .attr('transform', 'translate(' + (width / 2 + margin.left) + ',' + (height / 2 + margin.top) + ')');
-  
+          .attr('transform', `translate(${(width / 2 + margin.left)},${(height / 2 + margin.top)})`);
   
       const x = d3.scaleBand()
           .range([0, 2 * Math.PI])
@@ -140,6 +138,8 @@ const IndexPage = () => {
       const y = d3.scaleRadial()
           .range([innerRadius, outerRadius])
           .domain([0, 13000]);
+
+      console.log('percentage', data.population);
   
       svg.append('g')
           .selectAll('path')
@@ -154,7 +154,7 @@ const IndexPage = () => {
           .attr('class', 'yo')
           .attr('d', d3.arc()
               .innerRadius(innerRadius)
-              .outerRadius((d) => y(d.case_count))
+              .outerRadius((d) => y((d.case_count / data.population) * 10000))
               .startAngle((d) => x(d.date))
               .endAngle((d) => x(d.date) + x.bandwidth())
               .padAngle(.1)
@@ -167,26 +167,34 @@ const IndexPage = () => {
           .enter()
           .append('g')
           .attr('text-anchor', function(d) { return (x(d.date) + x.bandwidth() / 2 + Math.PI) % (2 * Math.PI) < Math.PI ? 'end' : 'start'; })
-          .attr('transform', function(d) { return 'rotate(' + ((x(d.date) + x.bandwidth() / 2) * 180 / Math.PI - 90) + ')' + 'translate(' + (y(-250) + 30) + ',0)'; })
+          .attr('transform', function(d) { return `rotate(${((x(d.date) + x.bandwidth() / 2) * 180 / Math.PI - 90)}) translate(${(y(-400) + 30)},0)`; })
           .append('text')
-          .text(function(d) { return (d.case_count) })
+          .text(function(d) { return (x(d.date) + x.bandwidth() / 2 + Math.PI) % (2 * Math.PI) < Math.PI ? `${d.case_count} - ${d.date}` : `${d.date} - ${d.case_count}`; })
           .attr('transform', function(d) { return (x(d.date) + x.bandwidth() / 2 + Math.PI) % (2 * Math.PI) < Math.PI ? 'rotate(180)' : 'rotate(0)'; })
-          .style('font-size', '11px')
+          .style('font-size', '10px')
+          .style('font-family', 'Courier New')
           .attr('alignment-baseline', 'middle');
-  
   };
+
+  function intro(selectValue) {
+    const population = dataset.filter(d => d.municipality === selectValue)[0].population;
+    d3.select('#intro')
+    .append('p')
+    .text(`This chart shows the percentatge of case counts by population (${population}) with weekly covid case count label by municipality.`)
+  }
   
   return (
     <main>
-        <h1>Covid Data by Municipality</h1>
-        <p>This chart shows the weekly covid case count by municipality.</p>
-        Municipality
+      <h1>Covid Data by Municipality</h1>
+        <div id="intro"></div>        
         <Select
           options={ municipalities }
           defaultValue={{ label: 'Acton', value: 'Acton' }}
           onChange={e => {
               document.getElementById('chart').innerHTML = '';
+              document.getElementById('intro').innerHTML = '';
               chart(e.label);
+              intro(e.label)
            }}
         />
         <div id="chart">
